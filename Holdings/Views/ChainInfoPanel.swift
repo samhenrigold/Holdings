@@ -11,17 +11,14 @@ struct ChainInfoPanel: View {
     let engine: GameEngine
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                Text("Hotel Chains")
-                    .font(.headline)
-
+        List {
+            Section("Hotel Chains") {
                 ForEach(HotelChain.allCases) { chain in
                     ChainInfoRow(chain: chain, engine: engine)
                 }
             }
         }
-        .contentMargins(16, for: .scrollContent)
+        .listStyle(.plain)
     }
 }
 
@@ -46,47 +43,43 @@ struct ChainInfoRow: View {
     }
 
     var body: some View {
-        HStack {
-            Circle()
-                .fill(chain.color)
-                .frame(width: 12, height: 12)
-
-            VStack(alignment: .leading) {
-                HStack {
-                    Text(chain.displayName)
-                        .font(.subheadline)
-
-                    if isSafe {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.green)
-                    }
-                }
-
-                if isActive {
-                    Text("Size: \(size) • $\(engine.stockPrice(for: chain))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer()
-
+        LabeledContent {
             if isActive {
                 VStack(alignment: .trailing) {
                     Text("You: \(playerStock)")
-                        .font(.caption)
-                    Text("Avail: \(engine.availableStock(for: chain))")
-                        .font(.caption2)
+                    Text("Bank: \(engine.availableStock(for: chain))")
                         .foregroundStyle(.secondary)
                 }
+                .font(.caption)
             } else {
                 Text("Inactive")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        } label: {
+            Label {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(chain.displayName)
+                        if isSafe {
+                            Image(systemName: "lock.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.green)
+                        }
+                    }
+                    
+                    if isActive {
+                        Text("Size: \(size) · \(Text(currency: engine.stockPrice(for: chain)))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } icon: {
+                Circle()
+                    .fill(chain.color)
+                    .frame(width: 12, height: 12)
+            }
         }
-        .padding(.vertical, 4)
         .opacity(isActive ? 1 : 0.5)
     }
 }

@@ -31,28 +31,25 @@ struct PlayerBadge: View {
     let isCurrent: Bool
 
     var body: some View {
-        VStack {
-            HStack {
-                if player.isHuman {
-                    Image(systemName: "person.fill")
-                } else {
-                    Image(systemName: "cpu")
-                }
+        Label {
+            VStack(alignment: .leading) {
                 Text(player.name)
                     .font(.headline)
+                Text(currency: player.money)
             }
-
-            Text("$\(player.money)")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        } icon: {
+            if player.isHuman {
+                Image(systemName: "person.fill")
+            } else {
+                Image(systemName: "cpu")
+            }
         }
         .padding()
-        .background(isCurrent ? Color.blue.opacity(0.2) : Color.secondary.opacity(0.1))
-        .clipShape(.rect(cornerRadius: 8))
-        .overlay(
+        .background {
             RoundedRectangle(cornerRadius: 8)
+                .fill(isCurrent ? AnyShapeStyle(.blue.tertiary) : AnyShapeStyle(.fill.tertiary))
                 .strokeBorder(isCurrent ? .blue : .clear, lineWidth: 2)
-        )
+        }
     }
 }
 

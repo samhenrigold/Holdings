@@ -12,37 +12,26 @@ struct MergerDecisionSheet: View {
     let engine: GameEngine
     let onDecision: (GameEngine.MergerStockDecision) -> Void
 
+    @State private var selectedAction: QuickAction = .keepAll
     @State private var sellCount = 0
     @State private var tradeCount = 0
     
-    private enum QuickAction: Equatable {
-        case sellAll
-        case tradeAll
-        case keepAll
-        case custom
-    }
-    
-    private var currentAction: QuickAction {
-        let maxTrade = (held / 2) * 2
-        if sellCount == held && tradeCount == 0 {
-            return .sellAll
-        } else if tradeCount == maxTrade && sellCount == held - maxTrade && maxTrade > 0 {
-            return .tradeAll
-        } else if sellCount == 0 && tradeCount == 0 {
-            return .keepAll
-        }
-        return .custom
+    private enum QuickAction: String, CaseIterable, Identifiable {
+        case sellAll = "Sell All"
+        case tradeAll = "Trade All"
+        case keepAll = "Keep All"
+        case custom = "Custom"
+        
+        var id: String { rawValue }
     }
 
     private var playerIndex: Int {
         let index = context.currentDecidingPlayerIndex ?? 0
-        // Ensure index is valid
         return min(index, engine.state.players.count - 1)
     }
 
     private var player: Player {
         guard playerIndex >= 0 && playerIndex < engine.state.players.count else {
-            // Fallback - should never happen
             return engine.currentPlayer
         }
         return engine.state.players[playerIndex]
@@ -50,6 +39,10 @@ struct MergerDecisionSheet: View {
 
     private var held: Int {
         player.stockCount(for: context.acquiredChain)
+    }
+    
+    private var maxTrade: Int {
+        (held / 2) * 2  // Round down to even
     }
 
     private var keepCount: Int {
@@ -72,7 +65,6 @@ struct MergerDecisionSheet: View {
         sellCount >= 0 && tradeCount >= 0 && sellCount + tradeCount <= held && tradeCount % 2 == 0
     }
     
-    // Safe ranges that never have lowerBound > upperBound
     private var maxSellable: Int {
         max(0, held - tradeCount)
     }
@@ -80,72 +72,101 @@ struct MergerDecisionSheet: View {
     private var maxTradeable: Int {
         max(0, held - sellCount)
     }
+    
+    private var availableActions: [QuickAction] {
+        var actions: [QuickAction] = [.sellAll]
+        if maxTrade > 0 {
+            actions.append(.tradeAll)
+        }
+        actions.append(contentsOf: [.keepAll, .custom])
+        return actions
+    }
 
     var body: some View {
         NavigationStack {
-            VStack {
-                // Header with chain colors
-                HStack {
-                    Circle()
-                        .fill(context.acquiredChain.color)
-                        .frame(width: 20, height: 20)
-                    Text(context.acquiredChain.displayName)
-                        .bold()
-                    Image(systemName: "arrow.right")
-                    Circle()
-                        .fill(context.survivingChain.color)
-                        .frame(width: 20, height: 20)
-                    Text(context.survivingChain.displayName)
-                        .bold()
+            Form {
+                Section {
+                    LabeledContent("Your Shares") {
+                        Text("\(held) @ \(Text(currency: stockPrice))")
+                    }
+                    
+                    LabeledContent("Total Value") {
+                        Text(currency: stockPrice * held)
+                            .bold()
+                    }
+                } header: {
+                    VStack {
+                        HStack {
+                            Circle()
+                                .fill(context.acquiredChain.color)
+                                .frame(width: 24, height: 24)
+
+                            Image(systemName: "arrow.forward")
+
+                            Circle()
+                                .fill(context.survivingChain.color)
+                                .frame(width: 24, height: 24)
+                        }
+                        Text("\(context.acquiredChain.displayName) acquired by \(context.survivingChain.displayName)")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .font(.title3)
-                .padding()
-                
-                Text("You hold **\(held) shares** of \(context.acquiredChain.displayName) at $\(stockPrice) each")
-                    .padding(.bottom)
-                
-                Form {
-                    // Quick action buttons
-                    Section("Quick Actions") {
-                        quickActionRow(
-                            action: .sellAll,
-                            title: "Sell All",
-                            detail: "+$\(stockPrice * held)",
-                            detailColor: .green
-                        ) {
-                            sellCount = held
-                            tradeCount = 0
-                        }
-                        
-                        let maxTrade = (held / 2) * 2  // Round down to even
-                        if maxTrade > 0 {
-                            quickActionRow(
-                                action: .tradeAll,
-                                title: "Trade All (\(maxTrade) → \(maxTrade / 2) \(context.survivingChain.displayName))",
-                                detail: held - maxTrade > 0 ? "+$\(stockPrice * (held - maxTrade))" : nil,
-                                detailColor: .green
-                            ) {
-                                tradeCount = maxTrade
-                                sellCount = held - maxTrade
-                            }
-                        }
-                        
-                        quickActionRow(
-                            action: .keepAll,
-                            title: "Keep All (hold for refounding)",
-                            detail: nil,
-                            detailColor: nil
-                        ) {
-                            sellCount = 0
-                            tradeCount = 0
+
+                Section {
+                    Picker("Action", selection: $selectedAction) {
+                        ForEach(availableActions) { action in
+                            Text(action.rawValue).tag(action)
                         }
                     }
-
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                }
+                
+                if selectedAction == .custom {
                     Section("Custom Split") {
-                        Stepper("Sell: \(sellCount) → $\(sellValue)", value: $sellCount, in: 0...maxSellable)
-                        Stepper("Trade: \(tradeCount) → \(tradeReceived) shares", value: $tradeCount, in: 0...maxTradeable, step: 2)
-                        Text("Keep: \(keepCount) shares")
-                            .foregroundStyle(.secondary)
+                        LabeledContent("Sell") {
+                            Stepper("\(sellCount) → \(Text(currency: sellValue))", value: $sellCount, in: 0...maxSellable)
+                                .monospacedDigit()
+                        }
+                        
+                        LabeledContent("Trade") {
+                            Stepper("\(tradeCount) → \(tradeReceived) shares", value: $tradeCount, in: 0...maxTradeable, step: 2)
+                                .monospacedDigit()
+                        }
+                        
+                        LabeledContent("Keep") {
+                            Text("\(keepCount) shares")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    Section("Result") {
+                        switch selectedAction {
+                        case .sellAll:
+                            LabeledContent("You Receive") {
+                                Text(currency: stockPrice * held)
+                                    .foregroundStyle(.green)
+                                    .bold()
+                            }
+                        case .tradeAll:
+                            LabeledContent("You Receive") {
+                                Text("\(maxTrade / 2) \(context.survivingChain.displayName) shares")
+                            }
+                            if held - maxTrade > 0 {
+                                LabeledContent("Plus Cash") {
+                                    Text(currency: stockPrice * (held - maxTrade))
+                                        .foregroundStyle(.green)
+                                }
+                            }
+                        case .keepAll:
+                            LabeledContent("Shares Kept") {
+                                Text("\(held) \(context.acquiredChain.displayName)")
+                            }
+                            Text("Hold for potential refounding of \(context.acquiredChain.displayName)")
+                                .foregroundStyle(.secondary)
+                        case .custom:
+                            EmptyView()
+                        }
                     }
                 }
             }
@@ -164,39 +185,28 @@ struct MergerDecisionSheet: View {
                     .disabled(!isValid)
                 }
             }
+            .onChange(of: selectedAction) { _, newAction in
+                applyQuickAction(newAction)
+            }
+            .onAppear {
+                applyQuickAction(selectedAction)
+            }
         }
     }
     
-    @ViewBuilder
-    private func quickActionRow(
-        action: QuickAction,
-        title: String,
-        detail: String?,
-        detailColor: Color?,
-        onTap: @escaping () -> Void
-    ) -> some View {
-        Button {
-            onTap()
-        } label: {
-            HStack {
-                if currentAction == action {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.blue)
-                } else {
-                    Image(systemName: "circle")
-                        .foregroundStyle(.secondary)
-                }
-                
-                Text(title)
-                    .foregroundStyle(.primary)
-                
-                Spacer()
-                
-                if let detail, let color = detailColor {
-                    Text(detail)
-                        .foregroundStyle(color)
-                }
-            }
+    private func applyQuickAction(_ action: QuickAction) {
+        switch action {
+        case .sellAll:
+            sellCount = held
+            tradeCount = 0
+        case .tradeAll:
+            tradeCount = maxTrade
+            sellCount = held - maxTrade
+        case .keepAll:
+            sellCount = 0
+            tradeCount = 0
+        case .custom:
+            break
         }
     }
 }

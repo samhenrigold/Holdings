@@ -7,66 +7,60 @@
 
 import SwiftUI
 
-struct MainMenuView: View {
+struct MainMenuSheet: View {
+    let hasSavedGame: Bool
     let onStartGame: (Int) -> Void
-    let onResumeGame: (() -> Void)?
+    let onResumeGame: () -> Void
     
-    @State private var selectedPlayerCount = 4
+    @State private var selectedPlayerCount = 3
 
     var body: some View {
         NavigationStack {
-            VStack {
-                Spacer()
+            Form {
+                Section {
+                    VStack {
+                        Text("Holdings")
+                            .font(.largeTitle)
+                            .bold()
+                        
+                        Text("A game of hotel chain investments")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                }
                 
-                Text("Holdings")
-                    .font(.largeTitle)
-                    .bold()
-
-                Text("A game of hotel chain investments")
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                VStack {
-                    Text("Number of Players")
-                        .font(.headline)
-
-                    Picker("Players", selection: $selectedPlayerCount) {
+                Section("New Game") {
+                    Picker("Number of Players", selection: $selectedPlayerCount) {
                         ForEach(2...6, id: \.self) { count in
                             Text("\(count) Players").tag(count)
                         }
                     }
                     .pickerStyle(.inline)
-                    .frame(maxWidth: 300)
-                }
-
-                VStack {
-                    Button("New Game") {
+                    .labelsHidden()
+                    
+                    Button("Start New Game") {
                         onStartGame(selectedPlayerCount)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    
-                    if let onResumeGame {
-                        Button("Resume Game") {
+                }
+                
+                if hasSavedGame {
+                    Section {
+                        Button("Resume Saved Game") {
                             onResumeGame()
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
                     }
                 }
-
-                Spacer()
             }
-            .padding()
         }
+        .interactiveDismissDisabled()
     }
 }
 
-#Preview {
-    MainMenuView(onStartGame: { _ in }, onResumeGame: nil)
+#Preview("No Saved Game") {
+    MainMenuSheet(hasSavedGame: false, onStartGame: { _ in }, onResumeGame: {})
 }
 
 #Preview("With Saved Game") {
-    MainMenuView(onStartGame: { _ in }, onResumeGame: {})
+    MainMenuSheet(hasSavedGame: true, onStartGame: { _ in }, onResumeGame: {})
 }

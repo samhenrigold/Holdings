@@ -14,14 +14,15 @@ struct GameLogView: View {
     var body: some View {
         NavigationStack {
             List(entries.reversed()) { entry in
-                VStack(alignment: .leading) {
+                Label {
                     Text(entry.message)
                     Text(entry.timestamp, format: .dateTime.hour().minute().second())
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                } icon: {
+                    EmptyView()
                 }
             }
             .navigationTitle("Game Log")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -67,9 +68,9 @@ struct GameLogView: View {
         GameLogEntry(message: "You sold 8 Continental for $5600"),
         GameLogEntry(message: "Computer 1 sold 6 Continental for $4200"),
         GameLogEntry(message: "Computer 2 sold 4 Continental for $2800"),
-        GameLogEntry(message: "Final standings:"),
-        GameLogEntry(message: "1. You: $42,300"),
+        GameLogEntry(message: "3. Computer 2: $31,600"),
         GameLogEntry(message: "2. Computer 1: $38,100"),
-        GameLogEntry(message: "3. Computer 2: $31,600")
+        GameLogEntry(message: "1. You: $42,300"),
+        GameLogEntry(message: "Final standings:"),
     ])
 }

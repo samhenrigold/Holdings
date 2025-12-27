@@ -14,29 +14,24 @@ struct ContentView: View {
     
     @State private var gameEngine: GameEngine?
     @State private var currentSavedGame: SavedGame?
-
-    private var resumeAction: (() -> Void)? {
-        if savedGames.isEmpty {
-            return nil
-        } else {
-            return { resumeGame() }
-        }
-    }
+    @State private var showingMainMenu = true
+    
+    /// A placeholder engine used for the background board display
+    @State private var placeholderEngine = GameEngine.createPlaceholder()
     
     var body: some View {
-        Group {
-            if let engine = gameEngine {
-                ActiveGameView(
-                    engine: engine,
-                    savedGame: currentSavedGame,
-                    onExit: exitGame
-                )
-            } else {
-                MainMenuView(
-                    onStartGame: startNewGame,
-                    onResumeGame: resumeAction
-                )
-            }
+        ActiveGameView(
+            engine: gameEngine ?? placeholderEngine,
+            savedGame: currentSavedGame,
+            onExit: exitGame,
+            isPlaceholder: gameEngine == nil
+        )
+        .sheet(isPresented: $showingMainMenu) {
+            MainMenuSheet(
+                hasSavedGame: !savedGames.isEmpty,
+                onStartGame: startNewGame,
+                onResumeGame: resumeGame
+            )
         }
     }
 
@@ -57,6 +52,8 @@ struct ContentView: View {
         } catch {
             print("Failed to create saved game: \(error)")
         }
+        
+        showingMainMenu = false
     }
     
     private func resumeGame() {
@@ -67,9 +64,9 @@ struct ContentView: View {
             let engine = GameEngine(state: state)
             gameEngine = engine
             currentSavedGame = savedGame
+            showingMainMenu = false
         } catch {
             print("Failed to load saved game: \(error)")
-            // Delete corrupted save
             modelContext.delete(savedGame)
         }
     }
@@ -93,6 +90,7 @@ struct ContentView: View {
         
         gameEngine = nil
         currentSavedGame = nil
+        showingMainMenu = true
     }
 }
 
@@ -101,11 +99,15 @@ struct ActiveGameView: View {
     @Bindable var engine: GameEngine
     let savedGame: SavedGame?
     let onExit: () -> Void
+    var isPlaceholder: Bool = false
     
     var body: some View {
         GameView(engine: engine, onExit: onExit)
+            .disabled(isPlaceholder)
             .onChange(of: engine.turnPhase) {
-                saveGame()
+                if !isPlaceholder {
+                    saveGame()
+                }
             }
     }
     
@@ -120,22 +122,9 @@ struct ActiveGameView: View {
     }
 }
 
-#Preview("No Saved Game") {
+#Preview("Main Menu Over Board") {
     ContentView()
         .modelContainer(for: SavedGame.self, inMemory: true)
-}
-
-#Preview("With Saved Game") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: SavedGame.self, configurations: config)
-    
-    // Create a saved game for the preview
-    let engine = GameEngine.previewWithActiveChains()
-    let savedGame = try! SavedGame(state: engine.state)
-    container.mainContext.insert(savedGame)
-    
-    return ContentView()
-        .modelContainer(container)
 }
 
 #Preview("Active Game") {

@@ -34,33 +34,22 @@ struct StockPurchaseSheet: View {
         engine.currentPlayer.money - totalCost
     }
 
-    let formatStyle: Decimal.FormatStyle.Currency = .currency(code: "USD").rounded(rule: .up, increment: 1)
-
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     LabeledContent("Your Cash") {
-                        Text(
-                            Decimal.FormatStyle.Currency.FormatInput(engine.currentPlayer.money),
-                            format: formatStyle
-                        )
+                        Text(currency: engine.currentPlayer.money)
                     }
 
                     LabeledContent("Purchase Total") {
-                        Text(
-                            Decimal.FormatStyle.Currency.FormatInput(totalCost),
-                            format: formatStyle.scale(-1)
-                        )
+                        Text(currency: -totalCost)
                     }
 
                     LabeledContent("After Purchase") {
-                        Text(
-                            Decimal.FormatStyle.Currency.FormatInput(remainingAfterPurchase),
-                            format: formatStyle
-                        )
-                        .foregroundStyle(canAfford ? AnyShapeStyle(.primary) : AnyShapeStyle(.red))
-                        .bold()
+                        Text(currency: remainingAfterPurchase)
+                            .foregroundStyle(canAfford ? AnyShapeStyle(.primary) : AnyShapeStyle(.red))
+                            .bold()
                     }
                 }
                 .contentTransition(.numericText(countsDown: true))
@@ -125,13 +114,12 @@ struct StockPurchaseRow: View {
 
     var body: some View {
         LabeledContent {
-            Text("$\(price)")
+            Text(currency: price)
             Stepper(
                 "Buy: \(buying)",
                 value: Binding(
                     get: { buying },
                     set: { newValue in
-                        // Clamp to valid range
                         let clamped = max(0, min(newValue, maxAllowed))
                         onCountChange(clamped)
                     }

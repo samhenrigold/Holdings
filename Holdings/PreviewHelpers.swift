@@ -269,5 +269,11 @@ extension GameEngine {
         
         return (stockContext, engine)
     }
+    
+    /// Creates a placeholder game engine for the background display (empty board)
+    @MainActor
+    static func createPlaceholder() -> GameEngine {
+        GameEngine(playerCount: 4, humanPlayerIndex: 0)
+    }
 }
 

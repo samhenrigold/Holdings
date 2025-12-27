@@ -17,20 +17,19 @@ struct FoundChainSheet: View {
                 Button {
                     onSelect(chain)
                 } label: {
-                    HStack {
-                        Circle()
-                            .fill(chain.color)
-                            .frame(width: 24, height: 24)
-
-                        Text(chain.displayName)
-
-                        Spacer()
-
+                    LabeledContent {
                         Text("Tier \(chain.tier)")
-                            .foregroundStyle(.secondary)
+                    } label: {
+                        Label {
+                            Text(chain.displayName)
+                        } icon: {
+                            Image(systemName: "circle.fill")
+                                .foregroundStyle(chain.color)
+                        }
                     }
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
             .navigationTitle("Found a Hotel Chain")
         }
     }

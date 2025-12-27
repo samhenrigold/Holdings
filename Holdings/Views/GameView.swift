@@ -51,7 +51,7 @@ struct GameView: View {
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Exit") {
+                    Button("Exit", role: .cancel) {
                         onExit()
                     }
                 }
