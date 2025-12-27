@@ -1,6 +1,6 @@
 //
-//  AccrueApp.swift
-//  Accrue
+//  HoldingsApp.swift
+//  Holdings
 //
 //  Created by Sam on 2025-12-27.
 //
@@ -9,10 +9,10 @@ import SwiftUI
 import SwiftData
 
 @main
-struct AccrueApp: App {
+struct HoldingsApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            SavedGame.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
