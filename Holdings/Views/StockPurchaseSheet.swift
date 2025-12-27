@@ -64,18 +64,28 @@ struct StockPurchaseSheet: View {
                     Text("You may buy up to \(GameRules.maxStockPurchasesPerTurn) stocks per turn from any active hotel chains.")
                 }
 
-                Section("Active Hotel Chains") {
-                    ForEach(sortedChains) { chain in
-                        StockPurchaseRow(
-                            chain: chain,
-                            chainSize: engine.board.chainSize(chain),
-                            price: engine.stockPrice(for: chain),
-                            inBank: engine.availableStock(for: chain),
-                            youOwn: engine.currentPlayer.stockCount(for: chain),
-                            buying: purchases[chain] ?? 0,
-                            maxCanBuy: GameRules.maxStockPurchasesPerTurn - (totalCount - (purchases[chain] ?? 0)),
-                            onCountChange: { purchases[chain] = $0 }
+                if sortedChains.isEmpty {
+                    Section {
+                        ContentUnavailableView(
+                            "No Active Chains",
+                            systemImage: "building.2",
+                            description: Text("Found a hotel chain first to buy stocks.")
                         )
+                    }
+                } else {
+                    Section("Active Hotel Chains") {
+                        ForEach(sortedChains) { chain in
+                            StockPurchaseRow(
+                                chain: chain,
+                                chainSize: engine.board.chainSize(chain),
+                                price: engine.stockPrice(for: chain),
+                                inBank: engine.availableStock(for: chain),
+                                youOwn: engine.currentPlayer.stockCount(for: chain),
+                                buying: purchases[chain] ?? 0,
+                                maxCanBuy: GameRules.maxStockPurchasesPerTurn - (totalCount - (purchases[chain] ?? 0)),
+                                onCountChange: { purchases[chain] = $0 }
+                            )
+                        }
                     }
                 }
             }

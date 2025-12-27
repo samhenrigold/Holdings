@@ -68,7 +68,14 @@ final class GameEngine {
 
         // Multiple chains - merger
         // The largest chain survives; safe chains cannot be acquired
-        let chainsBySize = adjacentChains.sorted { board.chainSize($0) > board.chainSize($1) }
+        // Ties broken by tier (higher tier wins), then alphabetically for consistency
+        let chainsBySize = adjacentChains.sorted { chain1, chain2 in
+            let size1 = board.chainSize(chain1)
+            let size2 = board.chainSize(chain2)
+            if size1 != size2 { return size1 > size2 }
+            if chain1.tier != chain2.tier { return chain1.tier > chain2.tier }
+            return chain1.rawValue < chain2.rawValue
+        }
         guard let surviving = chainsBySize.first else {
             // Should never happen since adjacentChains.count > 1
             return .independent

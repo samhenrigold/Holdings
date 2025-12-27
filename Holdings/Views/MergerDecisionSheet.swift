@@ -41,8 +41,18 @@ struct MergerDecisionSheet: View {
         player.stockCount(for: context.acquiredChain)
     }
     
+    private var survivingStockAvailable: Int {
+        engine.availableStock(for: context.survivingChain)
+    }
+    
     private var maxTrade: Int {
-        (held / 2) * 2  // Round down to even
+        let evenHeld = (held / 2) * 2  // Round down to even
+        let maxByAvailability = survivingStockAvailable * 2  // Can only trade if bank has stock
+        return min(evenHeld, maxByAvailability)
+    }
+    
+    private var tradeIsLimited: Bool {
+        survivingStockAvailable < held / 2
     }
 
     private var keepCount: Int {
@@ -151,6 +161,10 @@ struct MergerDecisionSheet: View {
                                     Text(currency: stockPrice * (held - maxTrade))
                                         .foregroundStyle(.green)
                                 }
+                            }
+                            if tradeIsLimited {
+                                Label("Limited by bank stock (\(survivingStockAvailable) available)", systemImage: "exclamationmark.triangle")
+                                    .foregroundStyle(.orange)
                             }
                         case .keepAll:
                             LabeledContent("Shares Kept") {

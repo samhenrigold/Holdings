@@ -18,11 +18,31 @@ struct GameView: View {
     @State private var mergerAlertInfo: MergerAlertInfo?
     @State private var showingGameLog = false
     @State private var showingChainInfo = true
+    @State private var showingGameOver = false
     @State private var pendingStockPurchases: [HotelChain: Int] = [:]
     
     struct MergerAlertInfo {
         let surviving: HotelChain
         let acquired: [HotelChain]
+    }
+    
+    private var turnPhaseMessage: String {
+        guard engine.gamePhase != .gameOver else { return "Game Over" }
+        
+        let playerName = engine.currentPlayer.isHuman ? "Your" : "\(engine.currentPlayer.name)'s"
+        
+        switch engine.turnPhase {
+        case .placeTile:
+            return engine.currentPlayer.isHuman ? "Place a tile" : "\(engine.currentPlayer.name) is placing..."
+        case .foundChain:
+            return engine.currentPlayer.isHuman ? "Choose a chain to found" : "\(engine.currentPlayer.name) is founding..."
+        case .buyStocks:
+            return engine.currentPlayer.isHuman ? "Buy stocks" : "\(engine.currentPlayer.name) is buying..."
+        case .resolveMerger, .handleMergerStock:
+            return "Resolving merger..."
+        case .endTurn:
+            return "\(playerName) turn ending..."
+        }
     }
 
     private let ai = AIPlayer(difficulty: .medium)
@@ -36,6 +56,14 @@ struct GameView: View {
                 
                 BoardView(engine: engine, onTilePlaced: handleTilePlaced)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                // Turn phase indicator
+                Text(turnPhaseMessage)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(.bar)
             }
             .navigationTitle("Holdings")
             .navigationBarTitleDisplayMode(.inline)
@@ -48,6 +76,13 @@ struct GameView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Log", systemImage: "list.bullet") {
                         showingGameLog = true
+                    }
+                }
+                if engine.currentPlayer.isHuman && engine.canDeclareGameOver() && engine.gamePhase != .gameOver {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("End Game", systemImage: "flag.checkered") {
+                            engine.declareGameOver()
+                        }
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
@@ -98,12 +133,20 @@ struct GameView: View {
             } message: { info in
                 Text("\(info.surviving.displayName) acquires \(info.acquired.map(\.displayName).joined(separator: ", "))")
             }
+            .alert("Game Over!", isPresented: $showingGameOver) {
+                Button("View Results") { }
+                Button("Exit", role: .destructive) { onExit() }
+            } message: {
+                if let winner = engine.state.players.max(by: { $0.money < $1.money }) {
+                    Text("\(winner.name) wins with \(Text(currency: winner.money))!")
+                }
+            }
             .onChange(of: engine.turnPhase) { _, newPhase in
                 handlePhaseChange(newPhase)
             }
             .onChange(of: engine.gamePhase) { _, newPhase in
                 if newPhase == .gameOver {
-                    // Could show game over screen
+                    showingGameOver = true
                 }
             }
         }
@@ -114,6 +157,15 @@ struct GameView: View {
     private func handlePhaseChange(_ phase: TurnPhase) {
         switch phase {
         case .placeTile:
+            // Check if player has any playable tiles
+            let playableTiles = engine.currentPlayer.tiles.filter { engine.canPlayTile($0) }
+            if playableTiles.isEmpty && !engine.currentPlayer.tiles.isEmpty {
+                // No playable tiles but has tiles - skip to buy stocks
+                // This handles the edge case where all tiles would create illegal mergers
+                engine.state.turnPhase = .buyStocks
+                return
+            }
+            
             if !engine.currentPlayer.isHuman {
                 performAITurn()
             }

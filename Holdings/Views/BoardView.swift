@@ -60,7 +60,7 @@ struct BoardView: View {
         let result = engine.analyzeTilePlacement(tile)
         switch result {
         case .illegal(let reason):
-            if reason.contains("seven hotel chains") {
+            if reason.contains("already active") {
                 return .blockedNoHotels
             } else if reason.contains("safe") {
                 return .blockedSafeChains

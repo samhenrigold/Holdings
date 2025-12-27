@@ -32,6 +32,7 @@ struct FoundChainSheet: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle("Found a Hotel Chain")
+            .interactiveDismissDisabled()
         }
     }
 

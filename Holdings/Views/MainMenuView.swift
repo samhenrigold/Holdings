@@ -13,6 +13,7 @@ struct MainMenuSheet: View {
     let onResumeGame: () -> Void
     
     @State private var selectedPlayerCount = 3
+    @State private var showingOverwriteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -40,7 +41,11 @@ struct MainMenuSheet: View {
                     .labelsHidden()
                     
                     Button("Start New Game") {
-                        onStartGame(selectedPlayerCount)
+                        if hasSavedGame {
+                            showingOverwriteConfirmation = true
+                        } else {
+                            onStartGame(selectedPlayerCount)
+                        }
                     }
                 }
                 
@@ -54,6 +59,18 @@ struct MainMenuSheet: View {
             }
         }
         .interactiveDismissDisabled()
+        .confirmationDialog(
+            "Start New Game?",
+            isPresented: $showingOverwriteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Start New Game", role: .destructive) {
+                onStartGame(selectedPlayerCount)
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will delete your saved game progress.")
+        }
     }
 }
 
