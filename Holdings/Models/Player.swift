@@ -19,7 +19,7 @@ struct Player: Identifiable, Codable, Sendable {
         self.id = id
         self.name = name
         self.isHuman = isHuman
-        self.money = 6000
+        self.money = GameRules.startingMoney
         self.stocks = [:]
         self.tiles = []
     }

@@ -15,7 +15,7 @@ struct Position: Hashable, Codable, Sendable {
     static let rows = 0...11
 
     var rowLetter: Character {
-        Character(UnicodeScalar(65 + row)!)  // A=0, B=1, etc.
+        Character(UnicodeScalar(UInt8(ascii: "A") + UInt8(row)))
     }
 
     var displayName: String {

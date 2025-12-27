@@ -13,16 +13,16 @@ struct BoardView: View {
 
     @State private var selectedTile: Tile?
     
-    // Check if all 7 hotel chains are active (blocking new chain founding)
+    // Check if all hotel chains are active (blocking new chain founding)
     private var allChainsActive: Bool {
-        engine.board.activeChains().count >= 7
+        engine.board.activeChains().count >= GameRules.maxActiveChains
     }
 
     var body: some View {
         Grid(horizontalSpacing: 0, verticalSpacing: 0) {
-            ForEach(0..<12, id: \.self) { row in
+            ForEach(Position.rows, id: \.self) { row in
                 GridRow {
-                    ForEach(1...9, id: \.self) { column in
+                    ForEach(Position.columns, id: \.self) { column in
                         let position = Position(column: column, row: row)
                         let tileStatus = getTileStatus(at: position)
                         BoardCellView(

@@ -57,11 +57,11 @@ struct StockPurchaseSheet: View {
 
                 Section {
                     LabeledContent("Stocks Selected") {
-                        Text("\(totalCount) of 3")
-                            .foregroundStyle(totalCount == 3 ? .orange : .secondary)
+                        Text("\(totalCount) of \(GameRules.maxStockPurchasesPerTurn)")
+                            .foregroundStyle(totalCount == GameRules.maxStockPurchasesPerTurn ? .orange : .secondary)
                     }
                 } footer: {
-                    Text("You may buy up to 3 stocks per turn from any active hotel chains.")
+                    Text("You may buy up to \(GameRules.maxStockPurchasesPerTurn) stocks per turn from any active hotel chains.")
                 }
 
                 Section("Active Hotel Chains") {
@@ -73,7 +73,7 @@ struct StockPurchaseSheet: View {
                             inBank: engine.availableStock(for: chain),
                             youOwn: engine.currentPlayer.stockCount(for: chain),
                             buying: purchases[chain] ?? 0,
-                            maxCanBuy: 3 - (totalCount - (purchases[chain] ?? 0)),
+                            maxCanBuy: GameRules.maxStockPurchasesPerTurn - (totalCount - (purchases[chain] ?? 0)),
                             onCountChange: { purchases[chain] = $0 }
                         )
                     }

@@ -21,7 +21,6 @@ final class SavedGame {
     var turnNumber: Int
     var humanMoney: Int
     
-    @MainActor
     init(state: GameState) throws {
         let encoder = JSONEncoder()
         self.gameStateData = try encoder.encode(state)
@@ -33,13 +32,11 @@ final class SavedGame {
         self.humanMoney = state.players.first(where: \.isHuman)?.money ?? 0
     }
     
-    @MainActor
     func loadGameState() throws -> GameState {
         let decoder = JSONDecoder()
         return try decoder.decode(GameState.self, from: gameStateData)
     }
     
-    @MainActor
     func update(with state: GameState) throws {
         let encoder = JSONEncoder()
         self.gameStateData = try encoder.encode(state)

@@ -94,7 +94,7 @@ struct ActiveChainRow: View {
         } label: {
             Label {
                 Text(chain.displayName)
-                Text("\(size) tiles · \(11 - size) to safe")
+                Text("\(size) tiles · \(GameRules.safeChainSize - size) to safe")
             } icon: {
                 ChainShape(chain: chain)
             }

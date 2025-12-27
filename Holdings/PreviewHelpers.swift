@@ -11,7 +11,6 @@ import Foundation
 
 extension GameEngine {
     /// Creates a game engine with tiles already placed and chains founded
-    @MainActor
     static func previewWithActiveChains() -> GameEngine {
         let engine = GameEngine(playerCount: 4, humanPlayerIndex: 0)
         
@@ -75,7 +74,6 @@ extension GameEngine {
     }
     
     /// Creates a game engine with a safe chain (11+ tiles)
-    @MainActor
     static func previewWithSafeChain() -> GameEngine {
         let engine = GameEngine(playerCount: 3, humanPlayerIndex: 0)
         
@@ -120,7 +118,6 @@ extension GameEngine {
     }
     
     /// Creates a game engine in the stock purchase phase
-    @MainActor
     static func previewBuyingStocks() -> GameEngine {
         let engine = previewWithActiveChains()
         engine.state.turnPhase = .buyStocks
@@ -128,7 +125,6 @@ extension GameEngine {
     }
     
     /// Creates a game engine with a pending merger
-    @MainActor
     static func previewMergerInProgress() -> GameEngine {
         let engine = GameEngine(playerCount: 4, humanPlayerIndex: 0)
         
@@ -171,7 +167,6 @@ extension GameEngine {
     }
     
     /// Creates a game engine with all 7 chains active
-    @MainActor
     static func previewAllChainsActive() -> GameEngine {
         let engine = GameEngine(playerCount: 4, humanPlayerIndex: 0)
         
@@ -202,7 +197,6 @@ extension GameEngine {
     }
     
     /// Creates a game engine in the founding chain phase
-    @MainActor
     static func previewFoundingChain() -> GameEngine {
         let engine = GameEngine(playerCount: 4, humanPlayerIndex: 0)
         
@@ -222,7 +216,6 @@ extension GameEngine {
     }
     
     /// Creates a game engine in game over state
-    @MainActor
     static func previewGameOver() -> GameEngine {
         let engine = previewWithSafeChain()
         engine.state.phase = .gameOver
@@ -248,7 +241,6 @@ extension GameEngine {
     }
     
     /// Creates a merger stock context for previews
-    @MainActor
     static func previewMergerStockContext() -> (MergerStockContext, GameEngine) {
         let engine = previewMergerInProgress()
         
@@ -272,7 +264,6 @@ extension GameEngine {
     }
     
     /// Creates a placeholder game engine for the background display (empty board)
-    @MainActor
     static func createPlaceholder() -> GameEngine {
         GameEngine(playerCount: 4, humanPlayerIndex: 0)
     }

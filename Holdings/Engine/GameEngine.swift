@@ -56,8 +56,8 @@ final class GameEngine {
 
         if adjacentChains.isEmpty {
             // Adjacent to independent tiles only - this founds a chain
-            if board.activeChains().count >= 7 {
-                return .illegal(reason: "All seven hotel chains are already active")
+            if board.activeChains().count >= GameRules.maxActiveChains {
+                return .illegal(reason: "All hotel chains are already active")
             }
             return .foundsChain
         }
@@ -255,7 +255,7 @@ final class GameEngine {
         if majorityHolders.count > 1 {
             // Tie for majority - split both bonuses
             let totalBonus = majorityBonus + minorityBonus
-            let splitBonus = (totalBonus / majorityHolders.count / 100) * 100  // Round down to nearest 100
+            let splitBonus = (totalBonus / majorityHolders.count / GameRules.bonusRoundingIncrement) * GameRules.bonusRoundingIncrement
             for holder in majorityHolders {
                 state.players[holder.index].money += splitBonus
                 log("\(state.players[holder.index].name) receives $\(splitBonus) (tied majority bonus)")
@@ -270,7 +270,7 @@ final class GameEngine {
             if !remaining.isEmpty {
                 let minorityCount = remaining.first!.count
                 let minorityHolders = remaining.filter { $0.count == minorityCount }
-                let splitBonus = (minorityBonus / minorityHolders.count / 100) * 100
+                let splitBonus = (minorityBonus / minorityHolders.count / GameRules.bonusRoundingIncrement) * GameRules.bonusRoundingIncrement
                 for holder in minorityHolders {
                     state.players[holder.index].money += splitBonus
                     log("\(state.players[holder.index].name) receives $\(splitBonus) (minority bonus)")
@@ -359,7 +359,7 @@ final class GameEngine {
         guard state.turnPhase == .buyStocks else { return }
 
         let totalCount = purchases.values.reduce(0, +)
-        guard totalCount <= 3 else { return }
+        guard totalCount <= GameRules.maxStockPurchasesPerTurn else { return }
 
         var totalCost = 0
         for (chain, count) in purchases {
@@ -450,9 +450,9 @@ final class GameEngine {
         let allSafe = chains.allSatisfy { board.isSafe($0) }
         if allSafe { return true }
 
-        // Any chain has 41+ tiles
-        let has41Plus = chains.contains { board.chainSize($0) >= 41 }
-        if has41Plus { return true }
+        // Any chain has reached end game size
+        let hasEndGameSize = chains.contains { board.chainSize($0) >= GameRules.endGameChainSize }
+        if hasEndGameSize { return true }
 
         return false
     }

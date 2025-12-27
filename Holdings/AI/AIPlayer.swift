@@ -129,7 +129,7 @@ struct AIPlayer {
         }
 
         // Second: prefer cheaper chains early, expensive chains late
-        let gameProgress = Double(engine.board.placedTiles.count) / 108.0
+        let gameProgress = Double(engine.board.placedTiles.count) / Double(GameRules.totalTiles)
 
         if gameProgress < 0.3 {
             // Early game - prefer cheaper chains
@@ -147,7 +147,7 @@ struct AIPlayer {
         let activeChains = engine.board.activeChains()
         var purchases: [HotelChain: Int] = [:]
         var remainingBudget = player.money
-        var remainingPurchases = 3
+        var remainingPurchases = GameRules.maxStockPurchasesPerTurn
 
         // Evaluate each chain
         var chainScores: [(chain: HotelChain, score: Double, price: Int)] = []
@@ -195,16 +195,17 @@ struct AIPlayer {
         let secondMaxHolding = allHoldings.sorted(by: >).dropFirst().first ?? 0
 
         // Can we become or stay majority?
+        let maxBuyable = GameRules.maxStockPurchasesPerTurn
         if ourStock >= maxHolding {
             score += 10.0  // Maintain/gain majority
-        } else if ourStock + 3 > maxHolding {
+        } else if ourStock + maxBuyable > maxHolding {
             score += 8.0  // Can overtake
-        } else if ourStock > secondMaxHolding || ourStock + 3 > secondMaxHolding {
+        } else if ourStock > secondMaxHolding || ourStock + maxBuyable > secondMaxHolding {
             score += 5.0  // Can be/become minority
         }
 
         // Chain size factors
-        if chainSize >= 11 {
+        if chainSize >= GameRules.safeChainSize {
             score += 3.0  // Safe chain - good investment
         } else if chainSize >= 6 {
             score += 1.0  // Medium chain
@@ -231,7 +232,6 @@ struct AIPlayer {
         engine: GameEngine
     ) -> GameEngine.MergerStockDecision {
         let held = player.stockCount(for: acquiredChain)
-//        let price = PriceChart.stockPrice(chain: acquiredChain, size: chainSize)
         let survivingAvailable = engine.availableStock(for: survivingChain)
 
         // Simple heuristic for medium difficulty:
@@ -246,7 +246,7 @@ struct AIPlayer {
         var trade = 0
         var keep = 0
 
-        if survivingIsSafe || survivingSize >= 6 {
+        if survivingIsSafe || survivingSize >= GameRules.safeChainSize / 2 {
             // Prefer trading
             let maxTrade = min(held, survivingAvailable * 2)
             trade = (maxTrade / 2) * 2  // Make it even
@@ -264,9 +264,9 @@ struct AIPlayer {
             return false
         }
 
-        if hasFoundingTile && keep == 0 && sell > 0 {
+        if hasFoundingTile && sell > 0 {
             // Keep a few shares for potential refounding
-            let keepAmount = min(sell, 3)
+            let keepAmount = min(sell, GameRules.maxStockPurchasesPerTurn)
             keep = keepAmount
             sell -= keepAmount
         }

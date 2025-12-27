@@ -28,7 +28,7 @@ struct Board: Codable, Sendable {
     }
 
     func isSafe(_ chain: HotelChain) -> Bool {
-        chainSize(chain) >= 11
+        chainSize(chain) >= GameRules.safeChainSize
     }
 
     func activeChains() -> Set<HotelChain> {

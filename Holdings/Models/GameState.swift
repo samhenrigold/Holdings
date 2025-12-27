@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct GameState: Codable, Sendable {
+struct GameState: Sendable {
     var board: Board
     var players: [Player]
     var currentPlayerIndex: Int
@@ -21,9 +21,9 @@ struct GameState: Codable, Sendable {
         players[currentPlayerIndex]
     }
 
-    static let stocksPerChain = 25
-    static let startingMoney = 6000
-    static let tilesPerPlayer = 6
+    static var stocksPerChain: Int { GameRules.stocksPerChain }
+    static var startingMoney: Int { GameRules.startingMoney }
+    static var tilesPerPlayer: Int { GameRules.tilesPerPlayer }
 
     init(playerCount: Int, humanPlayerIndex: Int = 0) {
         // Create all tiles and shuffle
@@ -114,5 +114,37 @@ struct GameLogEntry: Identifiable, Codable, Sendable {
         self.id = UUID()
         self.timestamp = Date()
         self.message = message
+    }
+}
+
+// MARK: - Codable Conformance (nonisolated for cross-actor use)
+
+extension GameState: Codable {
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        board = try container.decode(Board.self, forKey: .board)
+        players = try container.decode([Player].self, forKey: .players)
+        currentPlayerIndex = try container.decode(Int.self, forKey: .currentPlayerIndex)
+        tileBag = try container.decode([Tile].self, forKey: .tileBag)
+        stockMarket = try container.decode([HotelChain: Int].self, forKey: .stockMarket)
+        phase = try container.decode(GamePhase.self, forKey: .phase)
+        turnPhase = try container.decode(TurnPhase.self, forKey: .turnPhase)
+        gameLog = try container.decode([GameLogEntry].self, forKey: .gameLog)
+    }
+    
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(board, forKey: .board)
+        try container.encode(players, forKey: .players)
+        try container.encode(currentPlayerIndex, forKey: .currentPlayerIndex)
+        try container.encode(tileBag, forKey: .tileBag)
+        try container.encode(stockMarket, forKey: .stockMarket)
+        try container.encode(phase, forKey: .phase)
+        try container.encode(turnPhase, forKey: .turnPhase)
+        try container.encode(gameLog, forKey: .gameLog)
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case board, players, currentPlayerIndex, tileBag, stockMarket, phase, turnPhase, gameLog
     }
 }

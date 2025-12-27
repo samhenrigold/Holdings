@@ -43,13 +43,18 @@ struct FoundChainSheet: View {
                     Button {
                         onSelect(chain)
                     } label: {
-                        Label {
-                            Text(chain.displayName)
-                        } icon: {
-                            ChainShape(chain: chain)
+                        LabeledContent {
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.tertiary)
+                        } label: {
+                            Label {
+                                Text(chain.displayName)
+                            } icon: {
+                                ChainShape(chain: chain)
+                            }
                         }
                     }
-                    .buttonStyle(.plain)
+                    .tint(.primary)
                 }
             }
         }
