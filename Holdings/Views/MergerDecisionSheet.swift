@@ -97,15 +97,9 @@ struct MergerDecisionSheet: View {
                 } header: {
                     VStack {
                         HStack {
-                            Circle()
-                                .fill(context.acquiredChain.color)
-                                .frame(width: 24, height: 24)
-
+                            ChainShape(chain: context.acquiredChain)
                             Image(systemName: "arrow.forward")
-
-                            Circle()
-                                .fill(context.survivingChain.color)
-                                .frame(width: 24, height: 24)
+                            ChainShape(chain: context.survivingChain)
                         }
                         Text("\(context.acquiredChain.displayName) acquired by \(context.survivingChain.displayName)")
                     }

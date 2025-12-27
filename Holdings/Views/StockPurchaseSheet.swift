@@ -133,9 +133,7 @@ struct StockPurchaseRow: View {
                 Text(chain.displayName)
                 Text("\(inBank) in bank · You own \(youOwn)")
             } icon: {
-                Circle()
-                    .fill(chain.color)
-                    .frame(width: 16, height: 16)
+                ChainShape(chain: chain)
             }
         }
     }

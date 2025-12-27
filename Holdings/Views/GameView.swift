@@ -58,7 +58,7 @@ struct GameView: View {
             }
             .inspector(isPresented: $showingChainInfo) {
                 ChainInfoPanel(engine: engine)
-                    .inspectorColumnWidth(min: 200, ideal: 250, max: 300)
+                    .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showingStockPurchase, onDismiss: {
                 // Treat dismissal as skipping stock purchase

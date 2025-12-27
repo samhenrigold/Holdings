@@ -44,12 +44,20 @@ struct PlayerBadge: View {
                 Image(systemName: "cpu")
             }
         }
-        .padding()
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
         .background {
             RoundedRectangle(cornerRadius: 8)
-                .fill(isCurrent ? AnyShapeStyle(.blue.tertiary) : AnyShapeStyle(.fill.tertiary))
-                .strokeBorder(isCurrent ? .blue : .clear, lineWidth: 2)
+                .fill(isCurrent ? AnyShapeStyle(Color.primary) : AnyShapeStyle(.fill.tertiary))
+                .phaseAnimator([false, isCurrent]) { content, value in
+                    content
+                        .opacity(value ? 0.6 : 1)
+                } animation: { _ in
+                        .easeInOut(duration: 1.5)
+                }
         }
+        .foregroundStyle(isCurrent ? AnyShapeStyle(.background) : AnyShapeStyle(Color.primary))
+        .animation(.default, value: isCurrent)
     }
 }
 

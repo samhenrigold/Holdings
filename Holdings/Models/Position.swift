@@ -8,11 +8,11 @@
 import Foundation
 
 struct Position: Hashable, Codable, Sendable {
-    let column: Int  // 1-12
-    let row: Int     // 0-8 (A-I)
+    let column: Int  // 1-9
+    let row: Int     // 0-11 (A-L)
 
-    static let columns = 1...12
-    static let rows = 0...8
+    static let columns = 1...9
+    static let rows = 0...11
 
     var rowLetter: Character {
         Character(UnicodeScalar(65 + row)!)  // A=0, B=1, etc.

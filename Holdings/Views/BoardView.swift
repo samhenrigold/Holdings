@@ -19,31 +19,23 @@ struct BoardView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            let cellSize = min(
-                geometry.size.width / 12,
-                geometry.size.height / 9
-            )
-
-            VStack(spacing: 1) {
-                ForEach(0..<9, id: \.self) { row in
-                    HStack(spacing: 1) {
-                        ForEach(1...12, id: \.self) { column in
-                            let position = Position(column: column, row: row)
-                            let tileStatus = getTileStatus(at: position)
-                            BoardCellView(
-                                position: position,
-                                board: engine.board,
-                                isSelected: selectedTile?.position == position,
-                                tileStatus: tileStatus,
-                                onTap: { handleCellTap(position) }
-                            )
-                            .frame(width: cellSize, height: cellSize)
-                        }
+        Grid(horizontalSpacing: 0, verticalSpacing: 0) {
+            ForEach(0..<12, id: \.self) { row in
+                GridRow {
+                    ForEach(1...9, id: \.self) { column in
+                        let position = Position(column: column, row: row)
+                        let tileStatus = getTileStatus(at: position)
+                        BoardCellView(
+                            position: position,
+                            board: engine.board,
+                            isSelected: selectedTile?.position == position,
+                            tileStatus: tileStatus,
+                            onTap: { handleCellTap(position) }
+                        )
+                        .aspectRatio(1, contentMode: .fit)
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding()
     }
@@ -107,41 +99,31 @@ struct BoardCellView: View {
             ZStack {
                 Rectangle()
                     .fill(AnyShapeStyle(backgroundColor))
-                    .overlay(
-                        Rectangle()
-                            .strokeBorder(AnyShapeStyle(borderColor), lineWidth: isSelected || canPlace ? 2 : 0.5)
-                    )
+                    .strokeBorder(AnyShapeStyle(borderColor), lineWidth: (isSelected || canPlace) ? 2 : 0.5)
 
                 if board.hasTile(at: position) {
                     if let chain = board.chain(at: position) {
-                        Image(systemName: "building.2.fill")
-                            .foregroundStyle(chain.color)
-                            .font(.title3)
+                        ChainShape(chain: chain)
                     } else {
-                        Circle()
-                            .fill(.gray)
-                            .padding(8)
+                        // Independent tile - not yet part of a chain
+                        Image(systemName: "building")
+                            .foregroundStyle(.secondary)
                     }
-                } else {
-                    VStack(spacing: 0) {
-                        Text(position.displayName)
-                            .font(.system(.caption2, design: .monospaced))
-                            .foregroundStyle(canPlace ? .primary : .tertiary)
-                            .bold(canPlace)
-                        
-                        // Show why tile is blocked
-                        if tileStatus == .blockedNoHotels {
-                            Image(systemName: "building.2.crop.circle.badge.exclamationmark")
-                                .font(.system(size: 8))
-                                .foregroundStyle(.orange)
-                        } else if tileStatus == .blockedSafeChains {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 8))
-                                .foregroundStyle(.red)
-                        }
-                    }
+                } else if tileStatus == .canPlay {
+                    // Playable tile highlight
+                    Image(systemName: "plus")
+                        .foregroundStyle(.green)
+                } else if tileStatus == .blockedNoHotels {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .imageScale(.small)
+                } else if tileStatus == .blockedSafeChains {
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(.red)
+                        .imageScale(.small)
                 }
             }
+            .font(.title)
         }
         .buttonStyle(.plain)
         .disabled(!canPlace)
@@ -152,15 +134,15 @@ struct BoardCellView: View {
         case .canPlay:
             return .green.tertiary
         case .blockedNoHotels:
-            return .orange.opacity(0.15)
+            return .orange.quaternary
         case .blockedSafeChains:
-            return .red.opacity(0.15)
+            return .red.quaternary
         default:
             if board.hasTile(at: position) {
                 if let chain = board.chain(at: position) {
                     return chain.color.tertiary
                 }
-                return .secondary
+                return .tertiary
             }
             return .clear
         }

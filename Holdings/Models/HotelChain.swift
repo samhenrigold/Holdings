@@ -41,4 +41,27 @@ enum HotelChain: String, CaseIterable, Codable, Sendable, Identifiable {
         case .tower: .orange
         }
     }
+    
+    var shapeIcon: String {
+        switch self {
+        case .sackson: "circle.fill"
+        case .worldwide: "triangle.fill"
+        case .festival: "square.fill"
+        case .imperial: "diamond.fill"
+        case .american: "pentagon.fill"
+        case .continental: "hexagon.fill"
+        case .tower: "octagon.fill"
+        }
+    }
+}
+
+// MARK: - Chain Shape View
+
+struct ChainShape: View {
+    let chain: HotelChain
+    
+    var body: some View {
+        Image(systemName: chain.shapeIcon)
+            .foregroundStyle(chain.color)
+    }
 }

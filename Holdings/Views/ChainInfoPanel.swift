@@ -9,78 +9,111 @@ import SwiftUI
 
 struct ChainInfoPanel: View {
     let engine: GameEngine
+    
+    private var safeChains: [HotelChain] {
+        HotelChain.allCases.filter { engine.board.isSafe($0) }
+    }
+    
+    private var activeChains: [HotelChain] {
+        HotelChain.allCases.filter {
+            engine.board.activeChains().contains($0) && !engine.board.isSafe($0)
+        }
+    }
+    
+    private var inactiveChains: [HotelChain] {
+        HotelChain.allCases.filter { !engine.board.activeChains().contains($0) }
+    }
 
     var body: some View {
         List {
-            Section("Hotel Chains") {
-                ForEach(HotelChain.allCases) { chain in
-                    ChainInfoRow(chain: chain, engine: engine)
+            if !safeChains.isEmpty {
+                Section("Safe") {
+                    ForEach(safeChains) { chain in
+                        SafeChainRow(chain: chain, engine: engine)
+                    }
+                }
+            }
+            
+            if !activeChains.isEmpty {
+                Section("Active") {
+                    ForEach(activeChains) { chain in
+                        ActiveChainRow(chain: chain, engine: engine)
+                    }
+                }
+            }
+            
+            if !inactiveChains.isEmpty {
+                Section("Available") {
+                    ForEach(inactiveChains) { chain in
+                        InactiveChainRow(chain: chain)
+                    }
                 }
             }
         }
-        .listStyle(.plain)
     }
 }
 
-struct ChainInfoRow: View {
+struct SafeChainRow: View {
     let chain: HotelChain
     let engine: GameEngine
-
-    private var isActive: Bool {
-        engine.board.activeChains().contains(chain)
-    }
-
-    private var size: Int {
-        engine.board.chainSize(chain)
-    }
-
-    private var isSafe: Bool {
-        engine.board.isSafe(chain)
-    }
-
-    private var playerStock: Int {
-        engine.currentPlayer.stockCount(for: chain)
-    }
+    
+    private var size: Int { engine.board.chainSize(chain) }
+    private var playerStock: Int { engine.currentPlayer.stockCount(for: chain) }
 
     var body: some View {
         LabeledContent {
-            if isActive {
-                VStack(alignment: .trailing) {
-                    Text("You: \(playerStock)")
-                    Text("Bank: \(engine.availableStock(for: chain))")
-                        .foregroundStyle(.secondary)
-                }
-                .font(.caption)
-            } else {
-                Text("Inactive")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            VStack(alignment: .trailing) {
+                Text(currency: engine.stockPrice(for: chain))
+                    .bold()
+                Text("You: \(playerStock) · Bank: \(engine.availableStock(for: chain))")
             }
         } label: {
             Label {
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text(chain.displayName)
-                        if isSafe {
-                            Image(systemName: "lock.fill")
-                                .font(.caption2)
-                                .foregroundStyle(.green)
-                        }
-                    }
-                    
-                    if isActive {
-                        Text("Size: \(size) · \(Text(currency: engine.stockPrice(for: chain)))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                Text(chain.displayName)
+                Text("\(size) tiles")
             } icon: {
-                Circle()
-                    .fill(chain.color)
-                    .frame(width: 12, height: 12)
+                ChainShape(chain: chain)
             }
         }
-        .opacity(isActive ? 1 : 0.5)
+    }
+}
+
+struct ActiveChainRow: View {
+    let chain: HotelChain
+    let engine: GameEngine
+    
+    private var size: Int { engine.board.chainSize(chain) }
+    private var playerStock: Int { engine.currentPlayer.stockCount(for: chain) }
+
+    var body: some View {
+        LabeledContent {
+            VStack(alignment: .trailing) {
+                Text(currency: engine.stockPrice(for: chain))
+                Text("You: \(playerStock) · Bank: \(engine.availableStock(for: chain))")
+            }
+        } label: {
+            Label {
+                Text(chain.displayName)
+                Text("\(size) tiles · \(11 - size) to safe")
+            } icon: {
+                ChainShape(chain: chain)
+            }
+        }
+    }
+}
+
+struct InactiveChainRow: View {
+    let chain: HotelChain
+
+    var body: some View {
+        Label {
+            Text(chain.displayName)
+            Text("Tier \(chain.tier)")
+        } icon: {
+            ChainShape(chain: chain)
+                .opacity(0.5)
+        }
+        .foregroundStyle(.secondary)
     }
 }
 

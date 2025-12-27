@@ -27,30 +27,30 @@ extension GameEngine {
         ])
         
         // American chain (5 tiles)
-        engine.state.board.placeTile(at: Position(column: 7, row: 3))
-        engine.state.board.placeTile(at: Position(column: 8, row: 3))
-        engine.state.board.placeTile(at: Position(column: 9, row: 3))
-        engine.state.board.placeTile(at: Position(column: 9, row: 4))
-        engine.state.board.placeTile(at: Position(column: 9, row: 5))
+        engine.state.board.placeTile(at: Position(column: 6, row: 4))
+        engine.state.board.placeTile(at: Position(column: 7, row: 4))
+        engine.state.board.placeTile(at: Position(column: 8, row: 4))
+        engine.state.board.placeTile(at: Position(column: 8, row: 5))
+        engine.state.board.placeTile(at: Position(column: 8, row: 6))
         engine.state.board.assignChain(.american, to: [
-            Position(column: 7, row: 3),
-            Position(column: 8, row: 3),
-            Position(column: 9, row: 3),
-            Position(column: 9, row: 4),
-            Position(column: 9, row: 5)
+            Position(column: 6, row: 4),
+            Position(column: 7, row: 4),
+            Position(column: 8, row: 4),
+            Position(column: 8, row: 5),
+            Position(column: 8, row: 6)
         ])
         
         // Tower chain (2 tiles) - newly founded
-        engine.state.board.placeTile(at: Position(column: 4, row: 6))
-        engine.state.board.placeTile(at: Position(column: 5, row: 6))
+        engine.state.board.placeTile(at: Position(column: 4, row: 8))
+        engine.state.board.placeTile(at: Position(column: 5, row: 8))
         engine.state.board.assignChain(.tower, to: [
-            Position(column: 4, row: 6),
-            Position(column: 5, row: 6)
+            Position(column: 4, row: 8),
+            Position(column: 5, row: 8)
         ])
         
         // Some independent tiles
-        engine.state.board.placeTile(at: Position(column: 11, row: 0))
-        engine.state.board.placeTile(at: Position(column: 1, row: 8))
+        engine.state.board.placeTile(at: Position(column: 9, row: 0))
+        engine.state.board.placeTile(at: Position(column: 1, row: 10))
         
         // Give players some stocks
         engine.state.players[0].addStock(.sackson, count: 5)
@@ -79,10 +79,10 @@ extension GameEngine {
     static func previewWithSafeChain() -> GameEngine {
         let engine = GameEngine(playerCount: 3, humanPlayerIndex: 0)
         
-        // Create a safe Continental chain (12 tiles)
+        // Create a safe Continental chain (12 tiles) - 4 columns x 3 rows
         var continentalPositions: Set<Position> = []
-        for col in 1...6 {
-            for row in 0...1 {
+        for col in 1...4 {
+            for row in 0...2 {
                 let pos = Position(column: col, row: row)
                 engine.state.board.placeTile(at: pos)
                 continentalPositions.insert(pos)
@@ -92,10 +92,10 @@ extension GameEngine {
         
         // Smaller Festival chain (4 tiles)
         let festivalPositions: Set<Position> = [
-            Position(column: 10, row: 5),
-            Position(column: 11, row: 5),
-            Position(column: 10, row: 6),
-            Position(column: 11, row: 6)
+            Position(column: 7, row: 8),
+            Position(column: 8, row: 8),
+            Position(column: 7, row: 9),
+            Position(column: 8, row: 9)
         ]
         for pos in festivalPositions {
             engine.state.board.placeTile(at: pos)
@@ -176,23 +176,24 @@ extension GameEngine {
         let engine = GameEngine(playerCount: 4, humanPlayerIndex: 0)
         
         let chains: [HotelChain] = [.sackson, .worldwide, .festival, .imperial, .american, .continental, .tower]
-        var currentCol = 1
         
-        for chain in chains {
-            let pos1 = Position(column: currentCol, row: 0)
-            let pos2 = Position(column: currentCol + 1, row: 0)
+        // Place chains in different rows to fit in 9x12 grid
+        let positions: [(col1: Int, col2: Int, row: Int)] = [
+            (1, 2, 0), (4, 5, 0), (7, 8, 0),  // Row 0
+            (1, 2, 2), (4, 5, 2), (7, 8, 2),  // Row 2
+            (4, 5, 4)                          // Row 4
+        ]
+        
+        for (index, chain) in chains.enumerated() {
+            let pos = positions[index]
+            let pos1 = Position(column: pos.col1, row: pos.row)
+            let pos2 = Position(column: pos.col2, row: pos.row)
             engine.state.board.placeTile(at: pos1)
             engine.state.board.placeTile(at: pos2)
             engine.state.board.assignChain(chain, to: [pos1, pos2])
             
-            // Give player 0 some stock in each
             engine.state.players[0].addStock(chain, count: 2)
             engine.state.stockMarket[chain] = 23
-            
-            currentCol += 2
-            if currentCol > 11 {
-                currentCol = 1
-            }
         }
         
         engine.state.players[0].money = 2000
@@ -206,12 +207,12 @@ extension GameEngine {
         let engine = GameEngine(playerCount: 4, humanPlayerIndex: 0)
         
         // Place two adjacent tiles to trigger founding
-        engine.state.board.placeTile(at: Position(column: 5, row: 4))
-        engine.state.board.placeTile(at: Position(column: 6, row: 4))
+        engine.state.board.placeTile(at: Position(column: 5, row: 5))
+        engine.state.board.placeTile(at: Position(column: 6, row: 5))
         
         // Place some other independent tiles
-        engine.state.board.placeTile(at: Position(column: 10, row: 2))
-        engine.state.board.placeTile(at: Position(column: 3, row: 7))
+        engine.state.board.placeTile(at: Position(column: 8, row: 2))
+        engine.state.board.placeTile(at: Position(column: 3, row: 9))
         
         // Set turn phase to founding
         let availableChains = HotelChain.allCases

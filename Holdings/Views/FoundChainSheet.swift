@@ -11,26 +11,47 @@ struct FoundChainSheet: View {
     let options: [HotelChain]
     let onSelect: (HotelChain) -> Void
 
+    private var tier1Chains: [HotelChain] {
+        options.filter { $0.tier == 1 }
+    }
+
+    private var tier2Chains: [HotelChain] {
+        options.filter { $0.tier == 2 }
+    }
+
+    private var tier3Chains: [HotelChain] {
+        options.filter { $0.tier == 3 }
+    }
+
     var body: some View {
         NavigationStack {
-            List(options) { chain in
-                Button {
-                    onSelect(chain)
-                } label: {
-                    LabeledContent {
-                        Text("Tier \(chain.tier)")
+            List {
+                tierSection("Tier 1", chains: tier1Chains)
+                tierSection("Tier 2", chains: tier2Chains)
+                tierSection("Tier 3", chains: tier3Chains)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Found a Hotel Chain")
+        }
+    }
+
+    @ViewBuilder
+    private func tierSection(_ title: String, chains: [HotelChain]) -> some View {
+        if !chains.isEmpty {
+            Section(title) {
+                ForEach(chains) { chain in
+                    Button {
+                        onSelect(chain)
                     } label: {
                         Label {
                             Text(chain.displayName)
                         } icon: {
-                            Image(systemName: "circle.fill")
-                                .foregroundStyle(chain.color)
+                            ChainShape(chain: chain)
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Found a Hotel Chain")
         }
     }
 }
